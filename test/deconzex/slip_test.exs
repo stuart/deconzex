@@ -56,13 +56,15 @@ defmodule Deconzex.SlipTest do
     test "escapes END characters" do
       frame = <<0x01, 0xC0, 0x02>>
 
-      assert {:ok, <<0xC0, 0x01, 0xDB, 0xDC, 0x02, 0xC0>>,_} = Deconzex.Slip.add_framing(frame, <<>>)
+      assert {:ok, <<0xC0, 0x01, 0xDB, 0xDC, 0x02, 0xC0>>, _} =
+               Deconzex.Slip.add_framing(frame, <<>>)
     end
 
     test "escapes ESC characters" do
       frame = <<0x01, 0xDB, 0x02>>
 
-      assert {:ok, <<0xC0, 0x01, 0xDB, 0xDD, 0x02, 0xC0>>, _} = Deconzex.Slip.add_framing(frame, <<>>)
+      assert {:ok, <<0xC0, 0x01, 0xDB, 0xDD, 0x02, 0xC0>>, _} =
+               Deconzex.Slip.add_framing(frame, <<>>)
     end
   end
 end

@@ -12,6 +12,7 @@ defmodule Deconzex.SerialPort do
     Logger.info("Opening serial port #{serial_port}")
 
     Circuits.UART.configure(uart, framing: {Deconzex.Slip, []})
+
     case Circuits.UART.open(uart, serial_port,
            speed: serial_speed,
            active: true
@@ -35,7 +36,7 @@ defmodule Deconzex.SerialPort do
     Circuits.UART.write(uart, frame)
   end
 
-  def handle_connection_lost(uart, serial_port) do
+  def handle_connection_lost(_uart, serial_port) do
     Logger.error("Lost serial port connection to #{serial_port}")
   end
 end

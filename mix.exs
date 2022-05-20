@@ -27,9 +27,9 @@ defmodule Deconzex.MixProject do
     ]
   end
 
-  defp mod(:test) do
-    []
-  end
+  # defp mod(:test) do
+  #   []
+  # end
 
   defp mod(_) do
     {Deconzex, []}

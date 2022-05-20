@@ -23,7 +23,8 @@ defmodule Deconzex.Parameters do
     nwk_update_id: 0x24,
     watchdog_ttl: 0x26,
     nwk_frame_counter: 0x27,
-    app_zdp_response_handling: 0x28
+    app_zdp_response_handling: 0x28,
+    test: 0x1E
   }
 
   @parameters %{
@@ -44,7 +45,8 @@ defmodule Deconzex.Parameters do
     0x24 => :nwk_update_id,
     0x26 => :watchdog_ttl,
     0x27 => :nwk_frame_counter,
-    0x28 => :app_zdp_response_handling
+    0x28 => :app_zdp_response_handling,
+    0x1E => :test
   }
 
   @parameter_formats %{
@@ -65,7 +67,8 @@ defmodule Deconzex.Parameters do
     nwk_update_id: :u8,
     watchdog_ttl: :u32,
     nwk_frame_counter: :u32,
-    app_zdp_response_handling: :app_zdp_response_handling
+    app_zdp_response_handling: :u16,
+    test: :binary
   }
 
   def find(parameter_id) do
@@ -121,6 +124,10 @@ defmodule Deconzex.Parameters do
     end)
   end
 
+  defp do_deserialize(:binary, value) do
+    value
+  end
+
   defp do_deserialize(_, _) do
     {:error, :cannot_deserialize_value}
   end
@@ -155,6 +162,10 @@ defmodule Deconzex.Parameters do
 
   defp do_serialize(:channel_mask, value) do
     <<Enum.reduce(value, 0, fn channel, acc -> bor(acc, channel_to_mask_bit(channel)) end)::32>>
+  end
+
+  defp do_serialize(:binary, value) do
+    value
   end
 
   defp do_serialize(_, _) do

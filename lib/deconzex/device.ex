@@ -8,7 +8,11 @@ defmodule Deconzex.Device do
       to and from it and forwards them to the appropriate handlers in the
       higher layers.
   """
-  defstruct uart: nil, seq: 0, listeners: [], uart_connected: false
+  defstruct uart: nil,
+            seq: 0,
+            listeners: [],
+            data_listeners: [],
+            uart_connected: false
 
   defmacro await(do: block) do
     quote do
@@ -28,7 +32,7 @@ defmodule Deconzex.Device do
   end
 
   def connect do
-    GenServer.cast(__MODULE__, :connect)
+    GenServer.call(__MODULE__, :connect)
   end
 
   def get_seq() do
@@ -43,12 +47,11 @@ defmodule Deconzex.Device do
     GenServer.cast(__MODULE__, :restart)
   end
 
-  def read_firmware_version do
+  def read_firmware_version() do
     GenServer.cast(__MODULE__, {&Protocol.read_firmware_version_request/1, [], self()})
 
     await do
-      %{major_version: major, minor_version: minor, platform: platform} ->
-        {major, minor, platform}
+      frame -> frame
     end
   end
 
@@ -97,15 +100,51 @@ defmodule Deconzex.Device do
     end
   end
 
+  def enqueue_send_data(
+        request_id,
+        address,
+        destination_endpoint,
+        profile_id,
+        cluster_id,
+        source_endpoint,
+        asdu
+      ) do
+    GenServer.cast(
+      __MODULE__,
+      {&Protocol.enqueue_send_data_request/8,
+       [
+         request_id,
+         address,
+         destination_endpoint,
+         profile_id,
+         cluster_id,
+         source_endpoint,
+         asdu
+       ], self()}
+    )
+
+    await do
+      frame -> frame
+    end
+  end
+
   ### Server
 
   @impl true
   def init([]) do
     Process.send_after(self(), :watchdog, 1000)
-    {:ok, %__MODULE__{uart: :uart, seq: 0, listeners: []}}
+    {:ok, %__MODULE__{uart: :uart, seq: 0, listeners: [], uart_connected: false}}
   end
 
   @impl true
+  def handle_call(:connect, _from, %{uart_connected: false} = state) do
+    {:reply, :ok, %{state | uart_connected: SerialPort.connect(state.uart)}}
+  end
+
+  def handle_call(:connect, _from, %{uart_connected: true} = state) do
+    {:noreply, %{state | uart_connected: true}}
+  end
+
   def handle_call(:get_seq, _from, state) do
     {:reply, state.seq, state}
   end
@@ -115,18 +154,37 @@ defmodule Deconzex.Device do
   end
 
   @impl true
-  def handle_cast(:connect, state) do
-    {:noreply, %{state | uart_connected: SerialPort.connect(state.uart)}}
+  def handle_cast(
+        {protocol_command, args, listener},
+        %{uart_connected: true} = state
+      ) do
+    SerialPort.write(state.uart, apply(protocol_command, [state.seq | args]))
+
+    {:noreply,
+     %{
+       state
+       | seq: Integer.mod(state.seq + 1, 256),
+         listeners: [{listener, state.seq} | state.listeners]
+     }}
   end
 
   def handle_cast(
         {protocol_command, args, listener},
-        %{uart: uart, seq: seq, listeners: listeners} = state
+        %{uart_connected: false} = state
       ) do
-    SerialPort.write(state.uart, apply(protocol_command, [seq | args]))
+    connection = SerialPort.connect(state.uart)
+
+    if connection do
+      SerialPort.write(state.uart, apply(protocol_command, [state.seq | args]))
+    end
 
     {:noreply,
-     %{state | seq: Integer.mod(seq + 1, 256), listeners: [{listener, seq} | listeners]}}
+     %{
+       state
+       | seq: Integer.mod(state.seq + 1, 256),
+         listeners: [{listener, state.seq} | state.listeners],
+         uart_connected: connection
+     }}
   end
 
   def handle_cast(:resart, state) do
@@ -146,20 +204,22 @@ defmodule Deconzex.Device do
     {:stop, :lost_connection, state}
   end
 
-  def handle_info({:circuits_uart, _serial_port, data}, %{listeners: listeners} = state) do
+  def handle_info({:circuits_uart, _serial_port, data}, state) do
     Logger.debug("Data from UART: #{inspect(data)}")
     frames = Deconzex.Protocol.decode(data)
     Logger.debug("Received frames: #{inspect(frames)}")
 
     unused_listeners =
-      Enum.reduce(frames, listeners, fn frame, listeners -> handle_frame(frame, listeners) end)
+      Enum.reduce(frames, state.listeners, fn frame, listeners ->
+        handle_frame(frame, listeners, state.data_listeners)
+      end)
 
     {:noreply, %{state | listeners: unused_listeners}}
   end
 
   # Keep the watchdog timer on the Conbee going.
   def handle_info(:watchdog, state) do
-    Logger.debug("Resetting watchdog timer.")
+    Logger.debug("Resetting Conbee watchdog timer.")
     keepalive_s = Application.fetch_env!(:deconzex, :device)[:keepalive_s]
 
     Process.send_after(self(), :watchdog, keepalive_s * 1000)
@@ -167,8 +227,22 @@ defmodule Deconzex.Device do
     {:noreply, state}
   end
 
-  defp handle_frame(%{seq: seq} = frame, listeners) do
-    valid_listeners = Enum.filter(listeners, fn {_, s} -> s == seq end)
+  defp handle_frame(
+         %{command: :device_state_changed, apsde_data_flags: %{aps_data_indication: 1}} = frame,
+         listeners,
+         data_listeners
+       ) do
+    Logger.info("Data indication frame recieved.")
+    Enum.each(data_listeners, fn listener -> Logger.debug("Sending frame") end)
+    do_handle_frame(frame, listeners)
+  end
+
+  defp handle_frame(frame, listeners, _) do
+    do_handle_frame(frame, listeners)
+  end
+
+  defp do_handle_frame(frame, listeners) do
+    valid_listeners = Enum.filter(listeners, fn {_, s} -> s == frame.seq end)
     Enum.each(valid_listeners, fn {pid, _} -> send(pid, frame) end)
     listeners -- valid_listeners
   end

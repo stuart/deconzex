@@ -9,13 +9,26 @@ defmodule Deconzex do
   def start(_type, _args) do
     Logger.info("Starting Deconzex App")
     resp = Deconzex.DeviceSupervisor.start_link({})
-    Device.connect()
 
     if Device.uart_connected() do
       form_network()
     end
 
     resp
+  end
+
+  def get_version do
+    Device.read_firmware_version()
+  end
+
+  def get_network_parameters do
+    %{
+      nwk_panid: Device.read_parameter(:nwk_panid),
+      aps_extended_panid: Device.read_parameter(:aps_extended_panid),
+      current_channel: Device.read_parameter(:current_channel),
+      network_key: Device.read_parameter(:network_key),
+      channel_mask: Device.read_parameter(:channel_mask)
+    }
   end
 
   def form_network do
@@ -39,6 +52,21 @@ defmodule Deconzex do
 
   def leave_network do
     Device.leave_network()
+  end
+
+  def permit_join(seconds, nwk_address) do
+  end
+
+  def reset do
+  end
+
+  def lqi do
+  end
+
+  def routing_table do
+  end
+
+  def node_descriptor(addr) do
   end
 
   def write(address, endpoint, profile_id, cluster_id, source_endpoint, asdu, radius \\ 0) do
