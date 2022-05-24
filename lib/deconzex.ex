@@ -41,7 +41,7 @@ defmodule Deconzex do
 
     pan_id = Map.get(network_config, :pan_id, nil)
     :ok = Device.write_parameter(:nwk_panid, pan_id)
-    network_update_id = Map.get(network_config, :network_update_id)
+    network_update_id = Map.get(network_config, :network_update_id, 0)
     network_key = Map.get(network_config, :network_key)
 
     %{status: :success} = Device.join_network()
@@ -54,22 +54,21 @@ defmodule Deconzex do
     Device.leave_network()
   end
 
-  def permit_join(seconds, nwk_address) do
+  def permit_join(seconds) do
+    
+  end
+
+  def permit_join(seconds) do
+    transaction_id = :rand.bytes(1)
+
   end
 
   def reset do
+    Device.reset()
   end
 
-  def lqi do
-  end
+  def write(%Deconzex.APS.Request{} = request) do
 
-  def routing_table do
-  end
-
-  def node_descriptor(addr) do
-  end
-
-  def write(address, endpoint, profile_id, cluster_id, source_endpoint, asdu, radius \\ 0) do
   end
 
   def listen(endpoint, listener) do

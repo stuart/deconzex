@@ -1,4 +1,10 @@
 defmodule Deconzex.Address do
+  @moduledoc """
+    Handles the various address modes used by the protocol.
+    The internal representation is `{mode, address}` but don't
+    rely on this as it may change.
+  """
+
   @address_mode_both 0x04
   @address_mode_ieee 0x03
   @address_mode_nwk 0x02
@@ -60,7 +66,9 @@ defmodule Deconzex.Address do
     {{:ieee, addr}, rest}
   end
 
-  def deserialize(<<@address_mode_both::8, short_addr::16-little, extended_addr::64-little, rest::binary>>) do
+  def deserialize(
+        <<@address_mode_both::8, short_addr::16-little, extended_addr::64-little, rest::binary>>
+      ) do
     {[{:nwk, short_addr}, {:ieee, extended_addr}], rest}
   end
 end

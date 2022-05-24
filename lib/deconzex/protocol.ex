@@ -111,6 +111,19 @@ defmodule Deconzex.Protocol do
     make_frame(@command_APS_DATA_INDICATION, seq, <<1::16-little, flags::8>>)
   end
 
+  def enqueue_send_data_request(seq, %Deconzex.APS.Request{} = request) do
+    enqueue_send_data_request(
+      seq,
+      request.request_id,
+      request.destination_address,
+      request.destination_endpoint,
+      request.profile_id,
+      request.cluster_id,
+      request.source_endpoint,
+      request.asdu
+    )
+  end
+
   def enqueue_send_data_request(
         seq,
         request_id,
@@ -133,9 +146,9 @@ defmodule Deconzex.Protocol do
     addr = Address.serialize(address)
 
     payload =
-      <<payload_len::16-little, request_id::8, 0x00, addr::binary,
-        dest_endpoint::8, profile_id::16-little, cluster_id::16-little, source_endpoint::8,
-        asdu_length::16-little, asdu::binary, 0x04, 0x00>>
+      <<payload_len::16-little, request_id::8, 0x00, addr::binary, dest_endpoint::8,
+        profile_id::16-little, cluster_id::16-little, source_endpoint::8, asdu_length::16-little,
+        asdu::binary, 0x04, 0x00>>
 
     make_frame(
       @command_APS_DATA_REQUEST,
