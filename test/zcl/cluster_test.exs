@@ -12,7 +12,6 @@ defmodule ZCL.ClusterTest.TestServerCluster do
   end
 end
 
-
 defmodule ZCL.ClusterTest.TestClientCluster do
   use ZCL.Cluster, %ZCL.Cluster{
     mode: :client,
@@ -21,7 +20,6 @@ defmodule ZCL.ClusterTest.TestClientCluster do
     attribute_values: %{}
   }
 end
-
 
 defmodule ZCL.ServerClusterTest do
   use ExUnit.Case
@@ -58,7 +56,6 @@ defmodule ZCL.ServerClusterTest do
   end
 end
 
-
 defmodule ZCL.ClientClusterTest do
   use ExUnit.Case
   alias ZCL.ClusterTest.TestClientCluster
@@ -77,7 +74,8 @@ defmodule ZCL.ClientClusterTest do
   end
 
   test "cannot write an attribute", %{cluster: cluster} do
-    assert {:error, :unknown_attribute} == ZCL.Cluster.set_attribute(cluster, :physical_environment, 0x02)
+    assert {:error, :unknown_attribute} ==
+             ZCL.Cluster.set_attribute(cluster, :physical_environment, 0x02)
   end
 
   test "cannot call the factory_reset via the command_key", %{cluster: cluster} do

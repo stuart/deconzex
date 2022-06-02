@@ -21,9 +21,13 @@ defmodule ZCL.Cluster do
       app_data: any application specific data that the application requires to have,
       stored on a per-cluster basis.
   """
-  defstruct mode: :server, callback_module: nil, cluster_module: nil, attribute_values: %{}, app_data: nil
+  defstruct mode: :server,
+            callback_module: nil,
+            cluster_module: nil,
+            attribute_values: %{},
+            app_data: nil
 
-  defmacro __using__ cluster_def do
+  defmacro __using__(cluster_def) do
     quote do
       @behaviour Map.get(unquote(cluster_def), :cluster_module)
 
@@ -121,28 +125,36 @@ defmodule ZCL.Cluster do
 
   def handle_call({:set_attribute, attribute_key, value}, _from, state) do
     case validate(state.mode, state.cluster_module, attribute_key, value) do
-      {:error, reason} -> {:reply, {:error, reason}, state}
-      {:ok, value} -> {:reply, :ok, %{state | attribute_values: Map.put(state.attribute_values, attribute_key, value)}}
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+
+      {:ok, value} ->
+        {:reply, :ok,
+         %{state | attribute_values: Map.put(state.attribute_values, attribute_key, value)}}
     end
   end
 
-  def handle_call({:command, command_key, args}, _from, %__MODULE__{mode: :server} = state) when is_atom(command_key) do
+  def handle_call({:command, command_key, args}, _from, %__MODULE__{mode: :server} = state)
+      when is_atom(command_key) do
     {:reply, Kernel.apply(state.callback_module, command_key, args), state}
   end
 
-  def handle_call({:command, command_id, args}, _from, %__MODULE__{mode: :server} =state) when is_integer(command_id) do
+  def handle_call({:command, command_id, args}, _from, %__MODULE__{mode: :server} = state)
+      when is_integer(command_id) do
     command_key = Map.fetch!(state.cluster_module.server_commands, command_id)
     {:reply, Kernel.apply(state.callback_module, command_key, args), state}
   end
 
-  def handle_call({:command, command_key, args}, _from, %__MODULE__{mode: :client} = state) when is_atom(command_key) do
-    case Map.find(state.cluster_module.client_commands, fn(id,key) -> key == command_key end) do
+  def handle_call({:command, command_key, args}, _from, %__MODULE__{mode: :client} = state)
+      when is_atom(command_key) do
+    case Map.find(state.cluster_module.client_commands, fn id, key -> key == command_key end) do
       {:ok, _} -> {:reply, Kernel.apply(state.callback_module, command_key, args), state}
       _ -> {:error, :unknown_command}
     end
   end
 
-  def handle_call({:command, command_id, args}, _from, %__MODULE__{mode: :client} =state) when is_integer(command_id) do
+  def handle_call({:command, command_id, args}, _from, %__MODULE__{mode: :client} = state)
+      when is_integer(command_id) do
     command_key = Map.fetch!(state.cluster_module.client_commands(command_id))
     {:reply, Kernel.apply(state.callback_module, command_key, args), state}
   end
@@ -154,14 +166,14 @@ defmodule ZCL.Cluster do
 
   defp initialize_attribute_values(:server, cluster_module, attribute_values) do
     Enum.reduce(cluster_module.server_attributes, attribute_values, fn attribute,
-                                                                      attribute_values ->
+                                                                       attribute_values ->
       Map.put_new(attribute_values, attribute.key, attribute.default)
     end)
   end
 
   defp initialize_attribute_values(:client, cluster_module, attribute_values) do
     Enum.reduce(cluster_module.client_attributes, attribute_values, fn attribute,
-                                                                      attribute_values ->
+                                                                       attribute_values ->
       Map.put_new(attribute_values, attribute.key, attribute.default)
     end)
   end
@@ -169,6 +181,7 @@ defmodule ZCL.Cluster do
   defp validate(:server, cluster_module, attribute_key, value) do
     attributes = cluster_module.server_attributes()
     attribute = find_attribute(attributes, attribute_key)
+
     if(attribute != nil) do
       ZCL.Attribute.validate(attribute, value)
     else
@@ -179,6 +192,7 @@ defmodule ZCL.Cluster do
   defp validate(:client, cluster_module, attribute_key, value) do
     attributes = cluster_module.client_attributes()
     attribute = find_attribute(attributes, attribute_key)
+
     if(attribute != nil) do
       ZCL.Attribute.validate(attribute, value)
     else
@@ -187,6 +201,6 @@ defmodule ZCL.Cluster do
   end
 
   defp find_attribute(attribute_list, key) do
-    Enum.find(attribute_list, fn(attribute) -> attribute.key == key end)
+    Enum.find(attribute_list, fn attribute -> attribute.key == key end)
   end
 end

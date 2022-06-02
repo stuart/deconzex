@@ -3,7 +3,6 @@ defmodule ZCL.Cluster.Basic do
   use ZCL.ClusterDefinition
 
   @callback factory_reset() :: :ok
-  @optional_callback :factory_reset
 
   def id do
     0x0000
