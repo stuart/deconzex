@@ -55,12 +55,6 @@ defmodule Deconzex do
   end
 
   def permit_join(seconds) do
-    
-  end
-
-  def permit_join(seconds) do
-    transaction_id = :rand.bytes(1)
-
   end
 
   def reset do
@@ -68,7 +62,6 @@ defmodule Deconzex do
   end
 
   def write(%Deconzex.APS.Request{} = request) do
-
   end
 
   def listen(endpoint, listener) do

@@ -1,7 +1,7 @@
 defmodule ZCL do
   use Application
   require Logger
-  
+
   @status_ids %{
     success: 0x00,
     failure: 0x01,
@@ -43,6 +43,4 @@ defmodule ZCL do
   def start(_type, _args) do
     Logger.info("Starting ZCL")
   end
-
-
 end

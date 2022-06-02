@@ -100,28 +100,8 @@ defmodule Deconzex.Device do
     end
   end
 
-  def enqueue_send_data(
-        request_id,
-        address,
-        destination_endpoint,
-        profile_id,
-        cluster_id,
-        source_endpoint,
-        asdu
-      ) do
-    GenServer.cast(
-      __MODULE__,
-      {&Protocol.enqueue_send_data_request/8,
-       [
-         request_id,
-         address,
-         destination_endpoint,
-         profile_id,
-         cluster_id,
-         source_endpoint,
-         asdu
-       ], self()}
-    )
+  def enqueue_send_data(%Deconzex.APS.Request{} = request) do
+    GenServer.cast(__MODULE__, {&Protocol.enqueue_send_data_request/2, [request], self()})
 
     await do
       frame -> frame
