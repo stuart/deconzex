@@ -5,6 +5,27 @@ defmodule Deconzex.Parameters do
     Conversion rules for the various network parameters.
   """
 
+  @type t() ::
+          :mac_address
+          | :nwk_panid
+          | :nwk_address
+          | :nwk_extended_panid
+          | :aps_designated_coordinator
+          | :channel_mask
+          | :aps_extended_panid
+          | :trust_center_address
+          | :security_mode
+          | :predifined_nwk_panid
+          | :network_key
+          | :link_key
+          | :current_channel
+          | :protocol_version
+          | :nwk_update_id
+          | :watchdog_ttl
+          | :nwk_frame_counter
+          | :app_zdp_response_handling
+          | :test
+
   @parameter_ids %{
     mac_address: 0x01,
     nwk_panid: 0x05,
@@ -71,18 +92,22 @@ defmodule Deconzex.Parameters do
     test: :binary
   }
 
+  @spec find(integer) :: t()
   def find(parameter_id) do
     Map.get(@parameters, parameter_id, :unknown)
   end
 
+  @spec id(atom) :: integer
   def id(parameter) do
     Map.get(@parameter_ids, parameter, 0)
   end
 
+  @spec deserialize(t(), binary) :: term
   def deserialize(parameter, value) do
     do_deserialize(Map.get(@parameter_formats, parameter), value)
   end
 
+  @spec serialize(t(), term) :: binary
   def serialize(parameter, value) do
     do_serialize(Map.get(@parameter_formats, parameter), value)
   end

@@ -10,24 +10,28 @@ defmodule Deconzex.Slip do
     A framer for Circuits.UART using the Seriail Line Internet Protocol (SLIP)
     as described in rfc1055.
   """
-
+  @impl true
   def init(_args) do
     {:ok, <<>>}
   end
 
+  @impl true
   def add_framing(data, rx_buffer) when is_binary(data) do
     {:ok, do_encode(data, <<>>), rx_buffer}
   end
 
+  @impl true
   def frame_timeout(rx_buffer) do
     # On a timeout, just return whatever was in the buffer
     {:ok, [rx_buffer], <<>>}
   end
 
+  @impl true
   def flush(:transmit, rx_buffer), do: rx_buffer
   def flush(:receive, _rx_buffer), do: <<>>
   def flush(:both, _rx_buffer), do: <<>>
 
+  @impl true
   def remove_framing(data, rx_buffer) do
     process_data(rx_buffer <> data, [])
   end

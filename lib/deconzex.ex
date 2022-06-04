@@ -1,11 +1,27 @@
+defmodule Deconzex.NetworkParameters do
+  defstruct nwk_panid: 0,
+            aps_extended_panid: 0,
+            current_channel: 0,
+            network_key: <<>>,
+            channel_mask: []
+
+  @type t :: %__MODULE__{}
+end
+
 defmodule Deconzex do
   use Application
-  alias Deconzex.Device
+  alias Deconzex.{Device, NetworkParameters}
   require Logger
 
   @moduledoc """
-  Documentation for `Deconzex`.
+    Documentation for `Deconzex`.
   """
+
+  @doc """
+    Starts the Conbee device. Will form or join a network if the
+    device connects successfully over the serial port.
+  """
+  @impl true
   def start(_type, _args) do
     Logger.info("Starting Deconzex App")
     resp = Deconzex.DeviceSupervisor.start_link({})
@@ -17,12 +33,24 @@ defmodule Deconzex do
     resp
   end
 
+  @doc """
+    Return the firmware version and platform of the device.
+  """
+  @spec get_version() :: %{
+          major_version: integer,
+          minor_version: integer,
+          platform: atom
+        }
   def get_version do
     Device.read_firmware_version()
   end
 
+  @doc """
+    Returns the network parameters set on the device.
+  """
+  @spec get_network_parameters() :: NetworkParameters.t()
   def get_network_parameters do
-    %{
+    %NetworkParameters{
       nwk_panid: Device.read_parameter(:nwk_panid),
       aps_extended_panid: Device.read_parameter(:aps_extended_panid),
       current_channel: Device.read_parameter(:current_channel),
@@ -31,7 +59,12 @@ defmodule Deconzex do
     }
   end
 
-  def form_network do
+  @doc """
+    Create or join a network. This is called by the start function so normally
+    should not be needed unless changing network parameters.
+  """
+  @spec form_network() :: :ok | {:error, :network_state_not_reached, :net_connected}
+  def form_network() do
     Logger.info("Forming Network")
     %{status: :success} = Device.leave_network()
     :ok = Device.write_parameter(:aps_designated_coordinator, true)
@@ -46,25 +79,74 @@ defmodule Deconzex do
 
     %{status: :success} = Device.join_network()
 
-    wait_for_network_status(:net_connected)
-    Logger.info("Network connected")
+    case wait_for_network_status(:net_connected) do
+      :ok ->
+        Logger.info("Network connected")
+        :ok
+
+      error ->
+        error
+    end
   end
 
+  @doc """
+    Leave any existing network.
+  """
+  @spec leave_network() :: :ok | {:error, :network_state_not_reached, :net_offline}
   def leave_network do
     Device.leave_network()
+
+    case wait_for_network_status(:net_offline) do
+      :ok ->
+        Logger.info("Network disconnected")
+        :ok
+
+      error ->
+        error
+    end
   end
 
+<<<<<<< HEAD
   def permit_join(seconds) do
+=======
+  @doc """
+    Accept join requests sent to this device.
+  """
+  @spec permit_join(integer, integer) :: :ok | {:error, atom}
+  def permit_join(seconds, nwk_address) do
+    :ok
+>>>>>>> master
   end
 
+  @doc """
+    Reset the device. Uses the watchdog timer. The device will take a couple of
+    seconds to stop and will then restart.
+  """
+  @spec reset :: :ok
   def reset do
     Device.reset()
   end
 
   def write(%Deconzex.APS.Request{} = request) do
+    :ok
   end
 
+  def lqi do
+  end
+
+  def routing_table do
+  end
+
+  def node_descriptor(addr) do
+  end
+
+  @doc """
+  Set a process as a listener of messages recieved by the device on the specified endpoint number.
+
+  """
+  @spec listen(integer, pid) :: :ok
   def listen(endpoint, listener) do
+    :ok
   end
 
   defp wait_for_network_status(status) do
