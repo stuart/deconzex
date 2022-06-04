@@ -1,7 +1,7 @@
 defmodule Deconzex.Device do
   use GenServer
   require Logger
-  alias Deconzex.{Protocol, SerialPort}
+  alias Deconzex.{Protocol, SerialPort, Parameters}
 
   @moduledoc """
       Controls the connection to the Conbee device, sends and recieves frames
@@ -54,7 +54,13 @@ defmodule Deconzex.Device do
     GenServer.cast(__MODULE__, :restart)
   end
 
-  @spec read_firmware_version() :: integer
+  @spec read_firmware_version() ::
+          %{
+            major_version: integer,
+            minor_version: integer,
+            platform: atom
+          }
+          | {:error, :timeout}
   def read_firmware_version() do
     GenServer.cast(__MODULE__, {&Protocol.read_firmware_version_request/1, [], self()})
 
@@ -63,7 +69,8 @@ defmodule Deconzex.Device do
     end
   end
 
-  @spec read_parameter(atom) :: {:error, :invalid_value} | {:error, :unsupported} | term
+  @spec read_parameter(Parameters.t()) ::
+          {:error, :invalid_value} | {:error, :unsupported} | {:error, :timeout} | term
   def read_parameter(parameter) do
     GenServer.cast(__MODULE__, {&Protocol.read_parameter_request/2, [parameter], self()})
 
@@ -74,6 +81,8 @@ defmodule Deconzex.Device do
     end
   end
 
+  @spec write_parameter(Parameters.t(), term) ::
+          :ok | {:error, :invalid_value} | {:error, :unsupported} | {:error, :timeout}
   def write_parameter(parameter, value) do
     GenServer.cast(__MODULE__, {&Protocol.write_parameter_request/3, [parameter, value], self()})
 
@@ -81,10 +90,10 @@ defmodule Deconzex.Device do
       %{status: :success} -> :ok
       %{status: :invalid_value} -> {:error, :invalid_value}
       %{status: :unsupported} -> {:error, :unsupported}
-      frame -> frame
     end
   end
 
+  @spec join_network() :: {:error, :timeout} | term
   def join_network do
     GenServer.cast(__MODULE__, {&Protocol.change_network_state/2, [:net_connected], self()})
 
@@ -93,6 +102,7 @@ defmodule Deconzex.Device do
     end
   end
 
+  @spec leave_network() :: {:error, :timeout} | term
   def leave_network do
     GenServer.cast(__MODULE__, {&Protocol.change_network_state/2, [:net_offline], self()})
 
