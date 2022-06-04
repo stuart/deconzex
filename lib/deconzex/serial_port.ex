@@ -4,6 +4,7 @@ defmodule Deconzex.SerialPort do
   @moduledoc """
     A wrapper around handling Circuits.UART functionality
   """
+  @spec connect(pid) :: boolean
   def connect(uart) do
     serial_config = Application.fetch_env!(:deconzex, :device)
     serial_port = Map.get(serial_config, :serial_port, "ttyACM0")
@@ -31,11 +32,13 @@ defmodule Deconzex.SerialPort do
     end
   end
 
+  @spec write(pid, binary) :: :ok
   def write(uart, frame) do
     Logger.debug("Sending data to UART: #{inspect(frame)}")
     Circuits.UART.write(uart, frame)
   end
 
+  @spec handle_connection_lost(pid, String.t()) :: :ok
   def handle_connection_lost(_uart, serial_port) do
     Logger.error("Lost serial port connection to #{serial_port}")
   end

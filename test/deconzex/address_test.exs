@@ -3,19 +3,19 @@ defmodule AddressTest do
   alias Deconzex.Address
 
   test "creating network address" do
-    address  = Address.nwk(123)
+    address = Address.nwk(123)
     assert Address.mode(address) == :nwk
     assert Address.addr(address) == 123
   end
 
   test "creating group address" do
-    address  = Address.group(123)
+    address = Address.group(123)
     assert Address.mode(address) == :group
     assert Address.addr(address) == 123
   end
 
   test "creating ieee address" do
-    address  = Address.ieee(0x0102030405060708)
+    address = Address.ieee(0x0102030405060708)
     assert Address.mode(address) == :ieee
     assert Address.addr(address) == 0x0102030405060708
   end
@@ -52,7 +52,7 @@ defmodule AddressTest do
     assert {addr, <<>>} == Address.deserialize(<<0x02, 0x1234::16-little>>)
   end
 
-    test "serialize group address" do
+  test "serialize group address" do
     address = Address.group(0xCFFF)
     assert <<0x01, 0xCFFF::16-little>> = Address.serialize(address)
   end
@@ -63,6 +63,7 @@ defmodule AddressTest do
   end
 
   test "deserialize address returns the rest of the data" do
-    assert {_, <<0x01, 0x02, 0x03>>} = Address.deserialize(<<0x01, 0x1234::16-little, 0x01, 0x02, 0x03>>)
+    assert {_, <<0x01, 0x02, 0x03>>} =
+             Address.deserialize(<<0x01, 0x1234::16-little, 0x01, 0x02, 0x03>>)
   end
 end

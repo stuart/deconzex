@@ -1,11 +1,14 @@
 defmodule Deconzex.Crc do
   use Bitwise
 
+  @spec add_crc(binary) :: binary
   def add_crc(frame) do
     frame <> crc(frame)
   end
 
   # Checks and strips off the CRC
+  @spec check_crc(binary) ::
+          {:ok, binary} | {:error, :invalid_crc, %{expected: binary, recieved: binary}}
   def check_crc(frame_with_crc) do
     crc = :binary.part(frame_with_crc, {byte_size(frame_with_crc), -2})
     frame = :binary.part(frame_with_crc, {0, byte_size(frame_with_crc) - 2})
@@ -19,6 +22,7 @@ defmodule Deconzex.Crc do
     end
   end
 
+  @spec crc(binary) :: binary
   def crc(frame) do
     crc = do_crc(frame, 0)
     crc = bnot(crc) + 1

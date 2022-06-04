@@ -71,18 +71,22 @@ defmodule Deconzex.Parameters do
     test: :binary
   }
 
+  @spec find(integer) :: atom
   def find(parameter_id) do
     Map.get(@parameters, parameter_id, :unknown)
   end
 
+  @spec id(atom) :: integer
   def id(parameter) do
     Map.get(@parameter_ids, parameter, 0)
   end
 
+  @spec deserialize(atom, binary) :: term
   def deserialize(parameter, value) do
     do_deserialize(Map.get(@parameter_formats, parameter), value)
   end
 
+  @spec serialize(atom, term) :: binary
   def serialize(parameter, value) do
     do_serialize(Map.get(@parameter_formats, parameter), value)
   end

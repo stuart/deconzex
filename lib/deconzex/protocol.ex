@@ -62,10 +62,12 @@ defmodule Deconzex.Protocol do
     net_leaving: 0x03
   }
 
+  @spec read_firmware_version_request(integer) :: binary
   def read_firmware_version_request(seq) do
     make_frame(@command_VERSION, seq, <<0::32>>)
   end
 
+  @spec read_parameter_request(integer, atom) :: binary
   def read_parameter_request(seq, :network_key) do
     parameter_id = Deconzex.Parameters.id(:network_key)
     make_frame(@command_READ_PARAMETER, seq, <<0x02::16-little, parameter_id::16-little>>)
@@ -82,6 +84,7 @@ defmodule Deconzex.Protocol do
     make_frame(@command_READ_PARAMETER, seq, <<0x01::16-little, parameter_id::8>>)
   end
 
+  @spec write_parameter_request(integer, atom, term) :: binary
   def write_parameter_request(seq, parameter, value) do
     parameter_id = Deconzex.Parameters.id(parameter)
     binary_value = Deconzex.Parameters.serialize(parameter, value)
@@ -94,23 +97,38 @@ defmodule Deconzex.Protocol do
     )
   end
 
+  @spec device_state_request(integer) :: binary
   def device_state_request(seq) do
     make_frame(@command_DEVICE_STATE, seq, <<0::24>>)
   end
 
+  @spec change_network_state(integer, :net_offline | :net_joining | :net_connected | :net_leaving) ::
+          binary
   def change_network_state(seq, network_state) do
     network_state_id = @network_state_ids[network_state]
     make_frame(@command_CHANGE_NETWORK_STATE, seq, <<network_state_id::8>>)
   end
 
+  @spec read_received_data_request(integer) :: binary
   def read_received_data_request(seq) do
     make_frame(@command_APS_DATA_INDICATION, seq, <<0::16-little>>)
   end
 
+  @spec read_received_data_request(integer, integer) :: binary
   def read_received_data_request(seq, flags) do
     make_frame(@command_APS_DATA_INDICATION, seq, <<1::16-little, flags::8>>)
   end
 
+  @spec enqueue_send_data_request(
+          integer,
+          integer,
+          Address.t(),
+          integer,
+          integer,
+          integer,
+          integer,
+          binary
+        ) :: binary
   def enqueue_send_data_request(
         seq,
         request_id,
@@ -133,9 +151,9 @@ defmodule Deconzex.Protocol do
     addr = Address.serialize(address)
 
     payload =
-      <<payload_len::16-little, request_id::8, 0x00, addr::binary,
-        dest_endpoint::8, profile_id::16-little, cluster_id::16-little, source_endpoint::8,
-        asdu_length::16-little, asdu::binary, 0x04, 0x00>>
+      <<payload_len::16-little, request_id::8, 0x00, addr::binary, dest_endpoint::8,
+        profile_id::16-little, cluster_id::16-little, source_endpoint::8, asdu_length::16-little,
+        asdu::binary, 0x04, 0x00>>
 
     make_frame(
       @command_APS_DATA_REQUEST,
@@ -144,10 +162,13 @@ defmodule Deconzex.Protocol do
     )
   end
 
+  @spec query_send_data_request(integer) :: binary
   def query_send_data_request(seq) do
     make_frame(@command_APS_DATA_CONFIRM, seq, <<0::16>>)
   end
 
+  @spec decode(binary) ::
+          [map] | {:error, :unprocessable_frame} | {:error, :invalid_frame_length, term}
   def decode(raw_frame) do
     Logger.debug("Decoding raw frame: #{inspect(raw_frame)}")
 

@@ -1,6 +1,7 @@
 defmodule Deconzex.DeviceSupervisor do
   use Supervisor
 
+  @spec start_link(term) :: {:ok, pid} | {:error, term}
   def start_link(init_arg) do
     Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end
@@ -12,6 +13,6 @@ defmodule Deconzex.DeviceSupervisor do
       {Deconzex.Device, []}
     ]
 
-    Supervisor.init(children, strategy: :one_for_all, name: __MODULE__)
+    Supervisor.init(children, strategy: :one_for_all)
   end
 end

@@ -14,6 +14,8 @@ defmodule Deconzex.Device do
             data_listeners: [],
             uart_connected: false
 
+  @type t :: %__MODULE__{}
+
   defmacro await(do: block) do
     quote do
       receive do
@@ -25,28 +27,34 @@ defmodule Deconzex.Device do
     end
   end
 
+  @spec start_link(term) :: {:ok, pid}
   def start_link(_) do
     {:ok, pid} = GenServer.start_link(__MODULE__, [], name: __MODULE__)
     connect()
     {:ok, pid}
   end
 
+  @spec connect() :: :ok | {:error, term}
   def connect do
     GenServer.call(__MODULE__, :connect)
   end
 
+  @spec get_seq() :: integer
   def get_seq() do
     GenServer.call(__MODULE__, :get_seq)
   end
 
+  @spec uart_connected() :: boolean
   def uart_connected() do
     GenServer.call(__MODULE__, :uart_connected)
   end
 
+  @spec restart() :: :ok
   def restart() do
     GenServer.cast(__MODULE__, :restart)
   end
 
+  @spec read_firmware_version() :: integer
   def read_firmware_version() do
     GenServer.cast(__MODULE__, {&Protocol.read_firmware_version_request/1, [], self()})
 
@@ -55,6 +63,7 @@ defmodule Deconzex.Device do
     end
   end
 
+  @spec read_parameter(atom) :: {:error, :invalid_value} | {:error, :unsupported} | term
   def read_parameter(parameter) do
     GenServer.cast(__MODULE__, {&Protocol.read_parameter_request/2, [parameter], self()})
 

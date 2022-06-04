@@ -23,7 +23,8 @@ defmodule Deconzex.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:circuits_uart, "~> 1.3"}
+      {:circuits_uart, "~> 1.3"},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
     ]
   end
 
