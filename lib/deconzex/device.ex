@@ -1,7 +1,7 @@
 defmodule Deconzex.Device do
   use GenServer
   require Logger
-  alias Deconzex.{Protocol, SerialPort, Parameters}
+  alias Deconzex.{Parameters, Protocol, SerialPort}
 
   @moduledoc """
       Controls the connection to the Conbee device, sends and recieves frames
@@ -43,22 +43,22 @@ defmodule Deconzex.Device do
   end
 
   @spec get_seq() :: integer
-  def get_seq() do
+  def get_seq do
     GenServer.call(__MODULE__, :get_seq)
   end
 
   @spec get_request_id() :: integer
-  def get_request_id() do
+  def get_request_id  do
     GenServer.call(__MODULE__, :get_request_id)
   end
 
   @spec uart_connected() :: boolean
-  def uart_connected() do
+  def uart_connected  do
     GenServer.call(__MODULE__, :uart_connected)
   end
 
   @spec restart() :: :ok
-  def restart() do
+  def restart  do
     GenServer.cast(__MODULE__, :restart)
   end
 
@@ -69,7 +69,7 @@ defmodule Deconzex.Device do
             platform: atom
           }
           | {:error, :timeout}
-  def read_firmware_version() do
+  def read_firmware_version do
     GenServer.cast(__MODULE__, {&Protocol.read_firmware_version_request/1, [], self()})
 
     await do

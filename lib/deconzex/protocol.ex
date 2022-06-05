@@ -9,15 +9,15 @@ defmodule Deconzex.Protocol do
 
   defstruct command: 0, seq: 0, args: {}
 
-  @command_DEVICE_STATE 0x07
-  @command_CHANGE_NETWORK_STATE 0x08
-  @command_READ_PARAMETER 0x0A
-  @command_WRITE_PARAMETER 0x0B
-  # @command_DEVICE_STATE_CHANGED 0x0E
-  @command_VERSION 0x0D
-  @command_APS_DATA_REQUEST 0x12
-  @command_APS_DATA_CONFIRM 0x04
-  @command_APS_DATA_INDICATION 0x17
+  @command_device_state 0x07
+  @command_change_network_state 0x08
+  @command_read_parameter 0x0A
+  @command_write_parameter 0x0B
+  # @command_device_state_CHANGED 0x0E
+  @command_version 0x0D
+  @command_aps_data_request 0x12
+  @command_aps_data_confirm 0x04
+  @command_aps_data_indication 0x17
   # @command_MAC_POLL_INDICATION 0x1C
   # @command_MAC_BEACON_INDICATION 0x1F
   # @command_UPDATE_BOOTLOADER 0x21
@@ -64,24 +64,24 @@ defmodule Deconzex.Protocol do
 
   @spec read_firmware_version_request(integer) :: binary
   def read_firmware_version_request(seq) do
-    make_frame(@command_VERSION, seq, <<0::32>>)
+    make_frame(@command_version, seq, <<0::32>>)
   end
 
   @spec read_parameter_request(integer, atom) :: binary
   def read_parameter_request(seq, :network_key) do
     parameter_id = Deconzex.Parameters.id(:network_key)
-    make_frame(@command_READ_PARAMETER, seq, <<0x02::16-little, parameter_id::16-little>>)
+    make_frame(@command_read_parameter, seq, <<0x02::16-little, parameter_id::16-little>>)
   end
 
   #
   # def read_parameter_request(seq, :link_key) do
   #   parameter_id = Deconzex.Parameters.id(:link_key)
-  #   make_frame(@command_READ_PARAMETER, seq, <<0x02::16-little, parameter_id::16-little>>)
+  #   make_frame(@command_read_parameter, seq, <<0x02::16-little, parameter_id::16-little>>)
   # end
 
   def read_parameter_request(seq, parameter) do
     parameter_id = Deconzex.Parameters.id(parameter)
-    make_frame(@command_READ_PARAMETER, seq, <<0x01::16-little, parameter_id::8>>)
+    make_frame(@command_read_parameter, seq, <<0x01::16-little, parameter_id::8>>)
   end
 
   @spec write_parameter_request(integer, atom, term) :: binary
@@ -91,7 +91,7 @@ defmodule Deconzex.Protocol do
     payload_len = byte_size(binary_value) + 1
 
     make_frame(
-      @command_WRITE_PARAMETER,
+      @command_write_parameter,
       seq,
       <<payload_len::16-little, parameter_id::8, binary_value::binary>>
     )
@@ -99,27 +99,27 @@ defmodule Deconzex.Protocol do
 
   @spec device_state_request(integer) :: binary
   def device_state_request(seq) do
-    make_frame(@command_DEVICE_STATE, seq, <<0::24>>)
+    make_frame(@command_device_state, seq, <<0::24>>)
   end
 
   @spec change_network_state(integer, :net_offline | :net_joining | :net_connected | :net_leaving) ::
           binary
   def change_network_state(seq, network_state) do
     network_state_id = @network_state_ids[network_state]
-    make_frame(@command_CHANGE_NETWORK_STATE, seq, <<network_state_id::8>>)
+    make_frame(@command_change_network_state, seq, <<network_state_id::8>>)
   end
 
   @spec read_received_data_request(integer) :: binary
   def read_received_data_request(seq) do
-    make_frame(@command_APS_DATA_INDICATION, seq, <<0::16-little>>)
+    make_frame(@command_aps_data_indication, seq, <<0::16-little>>)
   end
 
   @spec read_received_data_request(integer, integer) :: binary
   def read_received_data_request(seq, flags) do
-    make_frame(@command_APS_DATA_INDICATION, seq, <<1::16-little, flags::8>>)
+    make_frame(@command_aps_data_indication, seq, <<1::16-little, flags::8>>)
   end
 
-  @spec enqueue_send_data_request(integer, %Deconzex.APS.Request{}) :: binary
+  @spec enqueue_send_data_request(integer, Deconzex.APS.Request.t()) :: binary
   def enqueue_send_data_request(seq, %Deconzex.APS.Request{} = request) do
     enqueue_send_data_request(
       seq,
@@ -170,7 +170,7 @@ defmodule Deconzex.Protocol do
         asdu::binary, 0x04, 0x00>>
 
     make_frame(
-      @command_APS_DATA_REQUEST,
+      @command_aps_data_request,
       seq,
       payload
     )
@@ -178,7 +178,7 @@ defmodule Deconzex.Protocol do
 
   @spec query_send_data_request(integer) :: binary
   def query_send_data_request(seq) do
-    make_frame(@command_APS_DATA_CONFIRM, seq, <<0::16>>)
+    make_frame(@command_aps_data_confirm, seq, <<0::16>>)
   end
 
   @spec decode(binary) ::

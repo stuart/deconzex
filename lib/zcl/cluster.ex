@@ -31,7 +31,7 @@ defmodule ZCL.Cluster do
     quote do
       @behaviour Map.get(unquote(cluster_def), :cluster_module)
 
-      def start_link() do
+      def start_link do
         ZCL.Cluster.start_link(unquote(cluster_def))
       end
     end
@@ -183,7 +183,7 @@ defmodule ZCL.Cluster do
     attributes = cluster_module.server_attributes()
     attribute = find_attribute(attributes, attribute_key)
 
-    if(attribute != nil) do
+    if attribute != nil do
       ZCL.Attribute.validate(attribute, value)
     else
       {:error, :unknown_attribute}
@@ -194,7 +194,7 @@ defmodule ZCL.Cluster do
     attributes = cluster_module.client_attributes()
     attribute = find_attribute(attributes, attribute_key)
 
-    if(attribute != nil) do
+    if attribute != nil do
       ZCL.Attribute.validate(attribute, value)
     else
       {:error, :unknown_attribute}

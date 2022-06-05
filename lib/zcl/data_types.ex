@@ -1,4 +1,8 @@
 defmodule ZCL.DataTypes do
+  @moduledoc """
+    Data types used in the Zigbee Cluster Library
+  """
+
   @types %{
     0x00 => {:nodata, 0, nil, nil},
     0x08 => {:data8, 8, nil, :discrete},
@@ -329,7 +333,7 @@ defmodule ZCL.DataTypes do
 
   defp do_serialize(:tod, %Time{} = value) do
     {microsecond, _precision} = value.microsecond
-    hundredths = div(microsecond, 10000)
+    hundredths = div(microsecond, 10_000)
     {:ok, <<value.hour::8, value.minute::8, value.second::8, hundredths::8>>}
   end
 
@@ -489,7 +493,7 @@ defmodule ZCL.DataTypes do
   end
 
   defp do_deserialize({:tod, _, _, _}, <<hour::8, minute::8, second::8, hundredth::8>>) do
-    Time.new(hour, minute, second, {hundredth * 10000, 2})
+    Time.new(hour, minute, second, {hundredth * 10_000, 2})
   end
 
   defp do_deserialize({:date, _, _, _}, <<year::8, month::8, day_of_month::8, day_of_week::8>>) do

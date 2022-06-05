@@ -8,7 +8,7 @@ defmodule Deconzex.SerialPort do
   def connect(uart) do
     serial_config = Application.fetch_env!(:deconzex, :device)
     serial_port = Map.get(serial_config, :serial_port, "ttyACM0")
-    serial_speed = Map.get(serial_config, :serial_speed, 38400)
+    serial_speed = Map.get(serial_config, :serial_speed, 38_400)
 
     Logger.info("Opening serial port #{serial_port}")
 

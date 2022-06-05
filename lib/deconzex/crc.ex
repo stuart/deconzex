@@ -1,6 +1,9 @@
 defmodule Deconzex.Crc do
   use Bitwise
 
+  @moduledoc """
+    CRC handling for the Conbee device serial protocol.
+  """
   @spec add_crc(binary) :: binary
   def add_crc(frame) do
     frame <> crc(frame)

@@ -1,4 +1,7 @@
 defmodule Configuration.Device do
+  @moduledoc """
+  ` Structure describing the configuration of a device.
+  """
   defstruct nwk_address: 0,
             ieee_address: "",
             is_child: false,
@@ -8,6 +11,9 @@ defmodule Configuration.Device do
 end
 
 defmodule Configuration do
+  @moduledoc """
+    Structure describing the configuration of an application.
+  """
   defstruct metadata: %{version: 1, date: ""},
             coordinator_ieee: "",
             pan_id: "",

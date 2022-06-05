@@ -2,6 +2,8 @@ defmodule ZCL do
   use Application
   require Logger
 
+  @moduledoc false
+
   @status_ids %{
     success: 0x00,
     failure: 0x01,

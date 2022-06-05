@@ -1,4 +1,5 @@
 defmodule Deconzex.NetworkParameters do
+  @moduledoc false
   defstruct nwk_panid: 0,
             aps_extended_panid: 0,
             current_channel: 0,
@@ -10,7 +11,7 @@ end
 
 defmodule Deconzex do
   use Application
-  alias Deconzex.{Device, NetworkParameters, Address}
+  alias Deconzex.{Address, Device, NetworkParameters}
   require Logger
 
   @moduledoc """
@@ -64,7 +65,7 @@ defmodule Deconzex do
     should not be needed unless changing network parameters.
   """
   @spec form_network() :: :ok | {:error, :network_state_not_reached, :net_connected}
-  def form_network() do
+  def form_network do
     Logger.info("Forming Network")
     %{status: :success} = Device.leave_network()
     :ok = Device.write_parameter(:aps_designated_coordinator, true)

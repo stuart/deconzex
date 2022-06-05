@@ -24,7 +24,8 @@ defmodule Deconzex.MixProject do
   defp deps do
     [
       {:circuits_uart, "~> 1.3"},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end
 

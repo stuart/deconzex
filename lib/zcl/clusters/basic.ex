@@ -2,6 +2,9 @@ defmodule ZCL.Cluster.Basic do
   alias ZCL.Attribute
   use ZCL.ClusterDefinition
 
+  @moduledoc """
+    Basic cluster
+  """
   @callback factory_reset() :: :ok
 
   def id do
@@ -147,11 +150,11 @@ defmodule ZCL.Cluster.Basic do
     []
   end
 
-  def server_commands() do
+  def server_commands do
     %{0x00 => :factory_reset}
   end
 
-  def client_commands() do
+  def client_commands do
     %{}
   end
 

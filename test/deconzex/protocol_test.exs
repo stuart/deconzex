@@ -1,6 +1,6 @@
 defmodule ProtocolTest do
   use ExUnit.Case
-  alias Deconzex.{Protocol, Address}
+  alias Deconzex.{Address, Protocol}
 
   describe "encode requests" do
     test "read_firmware_version_request" do

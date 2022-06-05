@@ -1,4 +1,8 @@
 defmodule ZCL.ClusterDefinition do
+  @moduledoc """
+    Behaviour for the definition of a cluster.
+  """
+
   @doc """
     Returns the cluster_id of the cluster.
   """

@@ -1,6 +1,9 @@
 defmodule ZCL.Attribute do
   alias ZCL.DataTypes
 
+  @moduledoc """
+    Handling ZCL attributes 
+  """
   defstruct id: 0,
             key: :none,
             name: "",
@@ -20,7 +23,7 @@ defmodule ZCL.Attribute do
   end
 
   # Validate data by trying to serialize it.
-  # Assume that if it serializes then it is okay. 
+  # Assume that if it serializes then it is okay.
   def validate(%__MODULE__{} = attribute, value) do
     case DataTypes.serialize(attribute.data_type, value) do
       {:error, reason} -> {:error, :invalid_value}

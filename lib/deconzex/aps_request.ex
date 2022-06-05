@@ -1,4 +1,7 @@
 defmodule Deconzex.APS.Request do
+  @moduledoc """
+    A request structure for APS requests...
+  """
   defstruct request_id: 0,
             destination_address: Deconzex.Address.nwk(0x0000),
             destination_endpoint: 0,
