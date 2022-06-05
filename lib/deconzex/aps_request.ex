@@ -6,4 +6,6 @@ defmodule Deconzex.APS.Request do
             cluster_id: 0,
             source_endpoint: 0,
             asdu: <<>>
+
+  @type t() :: %__MODULE__{}
 end

@@ -10,7 +10,7 @@ end
 
 defmodule Deconzex do
   use Application
-  alias Deconzex.{Device, NetworkParameters}
+  alias Deconzex.{Device, NetworkParameters, Address}
   require Logger
 
   @moduledoc """
@@ -106,16 +106,33 @@ defmodule Deconzex do
     end
   end
 
-<<<<<<< HEAD
-  def permit_join(seconds) do
-=======
   @doc """
-    Accept join requests sent to this device.
+    Accept join requests sent to this device for a period of time.
   """
   @spec permit_join(integer, integer) :: :ok | {:error, atom}
-  def permit_join(seconds, nwk_address) do
-    :ok
->>>>>>> master
+  def permit_join(seconds, nwk_address \\ 0xFFFC) do
+    request_id = Device.get_request_id()
+    zdp_frame = <<request_id::8, seconds::8, 0x00>>
+
+    request = %Deconzex.APS.Request{
+      request_id: request_id,
+      destination_address: Address.nwk(nwk_address),
+      destination_endpoint: 0,
+      profile_id: 0,
+      cluster_id: 0x36,
+      source_endpoint: 0,
+      asdu: zdp_frame
+    }
+
+    case Device.enqueue_send_data(request) do
+      :ok ->
+        :ok = Device.write_parameter(:permit_join, seconds)
+        Logger.debug("permit join for #{seconds} seconds")
+        :ok
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   @doc """
@@ -124,14 +141,15 @@ defmodule Deconzex do
   """
   @spec reset :: :ok
   def reset do
-    Device.reset()
+    # Device.reset()
+    :ok
   end
 
   def write(%Deconzex.APS.Request{} = request) do
     :ok
   end
 
-  def lqi do
+  def lqi(nwk_address) do
   end
 
   def routing_table do
@@ -142,7 +160,6 @@ defmodule Deconzex do
 
   @doc """
   Set a process as a listener of messages recieved by the device on the specified endpoint number.
-
   """
   @spec listen(integer, pid) :: :ok
   def listen(endpoint, listener) do

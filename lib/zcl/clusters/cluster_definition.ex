@@ -45,11 +45,11 @@ defmodule ZCL.ClusterDefinition do
   """
   @callback client_command(integer) :: {:ok, term} | {:error, term}
 
-  defmacro server_command callback_function do
+  defmacro server_command(callback_function) do
     @callback callback_function
   end
 
-  defmacro client_command callback_function do 
+  defmacro client_command(callback_function) do
     @callback callback_function
   end
 

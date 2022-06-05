@@ -97,6 +97,7 @@ defmodule ZCL.Cluster do
   """
   @spec set_app_data(server, term) :: :ok
   def set_app_data(cluster, app_data) do
+    :ok
   end
 
   @doc """
@@ -147,7 +148,7 @@ defmodule ZCL.Cluster do
 
   def handle_call({:command, command_key, args}, _from, %__MODULE__{mode: :client} = state)
       when is_atom(command_key) do
-    case Map.find(state.cluster_module.client_commands, fn id, key -> key == command_key end) do
+    case Enum.find(state.cluster_module.client_commands, fn({id, key}) -> key == command_key end) do
       {:ok, _} -> {:reply, Kernel.apply(state.callback_module, command_key, args), state}
       _ -> {:error, :unknown_command}
     end
@@ -155,7 +156,7 @@ defmodule ZCL.Cluster do
 
   def handle_call({:command, command_id, args}, _from, %__MODULE__{mode: :client} = state)
       when is_integer(command_id) do
-    command_key = Map.fetch!(state.cluster_module.client_commands(command_id))
+    command_key = Map.fetch!(state.cluster_module.client_commands, command_id)
     {:reply, Kernel.apply(state.callback_module, command_key, args), state}
   end
 

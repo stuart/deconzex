@@ -40,6 +40,7 @@ defmodule Deconzex.Parameters do
     network_key: 0x18,
     link_key: 0x19,
     current_channel: 0x1C,
+    permit_join: 0x21,
     protocol_version: 0x22,
     nwk_update_id: 0x24,
     watchdog_ttl: 0x26,
@@ -62,6 +63,7 @@ defmodule Deconzex.Parameters do
     0x18 => :network_key,
     0x19 => :link_key,
     0x1C => :current_channel,
+    0x21 => :permit_join,
     0x22 => :protocol_version,
     0x24 => :nwk_update_id,
     0x26 => :watchdog_ttl,
@@ -70,6 +72,7 @@ defmodule Deconzex.Parameters do
     0x1E => :test
   }
 
+  @type param :: integer | binary | boolean
   @parameter_formats %{
     mac_address: :u64,
     nwk_panid: :u16,
@@ -84,6 +87,7 @@ defmodule Deconzex.Parameters do
     network_key: :key,
     link_key: :link_key,
     current_channel: :u8,
+    permit_join: :u8,
     protocol_version: :u16,
     nwk_update_id: :u8,
     watchdog_ttl: :u32,

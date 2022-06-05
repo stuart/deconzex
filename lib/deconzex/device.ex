@@ -9,10 +9,13 @@ defmodule Deconzex.Device do
       higher layers.
   """
   defstruct uart: nil,
+            # Serial port message sequence number.
             seq: 0,
             listeners: [],
             data_listeners: [],
-            uart_connected: false
+            uart_connected: false,
+            # Incermenting request id.
+            request_id: 0
 
   @type t :: %__MODULE__{}
 
@@ -44,6 +47,11 @@ defmodule Deconzex.Device do
     GenServer.call(__MODULE__, :get_seq)
   end
 
+  @spec get_request_id() :: integer
+  def get_request_id() do
+    GenServer.call(__MODULE__, :get_request_id)
+  end
+
   @spec uart_connected() :: boolean
   def uart_connected() do
     GenServer.call(__MODULE__, :uart_connected)
@@ -70,7 +78,7 @@ defmodule Deconzex.Device do
   end
 
   @spec read_parameter(Parameters.t()) ::
-          {:error, :invalid_value} | {:error, :unsupported} | {:error, :timeout} | term
+          {:error, :invalid_value} | {:error, :unsupported} | {:error, :timeout} | Parameters.param
   def read_parameter(parameter) do
     GenServer.cast(__MODULE__, {&Protocol.read_parameter_request/2, [parameter], self()})
 
@@ -81,7 +89,7 @@ defmodule Deconzex.Device do
     end
   end
 
-  @spec write_parameter(Parameters.t(), term) ::
+  @spec write_parameter(Parameters.t(), Parameters.param) ::
           :ok | {:error, :invalid_value} | {:error, :unsupported} | {:error, :timeout}
   def write_parameter(parameter, value) do
     GenServer.cast(__MODULE__, {&Protocol.write_parameter_request/3, [parameter, value], self()})
@@ -93,7 +101,7 @@ defmodule Deconzex.Device do
     end
   end
 
-  @spec join_network() :: {:error, :timeout} | term
+  @spec join_network() :: {:error, :timeout} | map
   def join_network do
     GenServer.cast(__MODULE__, {&Protocol.change_network_state/2, [:net_connected], self()})
 
@@ -111,6 +119,7 @@ defmodule Deconzex.Device do
     end
   end
 
+  @spec device_state() :: term
   def device_state do
     GenServer.cast(__MODULE__, {&Protocol.device_state_request/1, [], self()})
 
@@ -119,8 +128,12 @@ defmodule Deconzex.Device do
     end
   end
 
+  @spec enqueue_send_data(Deconzex.APS.Request.t()) :: term
   def enqueue_send_data(%Deconzex.APS.Request{} = request) do
-    GenServer.cast(__MODULE__, {&Protocol.enqueue_send_data_request/2, [request], self()})
+    GenServer.cast(
+      __MODULE__,
+      {&Protocol.enqueue_send_data_request/2, [request], self()}
+    )
 
     await do
       frame -> frame
@@ -150,6 +163,10 @@ defmodule Deconzex.Device do
 
   def handle_call(:uart_connected, _from, state) do
     {:reply, state.uart_connected, state}
+  end
+
+  def handle_call(:get_request_id, _from, state) do
+    {:reply, state.request_id, %{state | request_id: Integer.mod(state.request_id + 1, 256)}}
   end
 
   @impl true

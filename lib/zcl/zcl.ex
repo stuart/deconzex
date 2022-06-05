@@ -40,7 +40,9 @@ defmodule ZCL do
     unsupported_cluster: 0xC3
   }
 
+  @impl true
   def start(_type, _args) do
     Logger.info("Starting ZCL")
+    {:ok, self()}
   end
 end
