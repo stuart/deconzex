@@ -143,6 +143,9 @@ defmodule Deconzex.Device do
     end
   end
 
+  def register_listener(endpoint, listener) do
+
+  end
   ### Server
 
   @impl true

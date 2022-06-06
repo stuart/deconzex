@@ -142,9 +142,12 @@ defmodule Deconzex do
   """
   @spec reset :: :ok
   def reset do
-    :ok
+    Device.restart()
   end
 
+  @doc """
+  Send a request across the network.
+  """
   def send_request(%Deconzex.APS.Request{} = request) do
     request_id = Device.get_request_id()
 
@@ -159,20 +162,12 @@ defmodule Deconzex do
     end
   end
 
-  def lqi(nwk_address) do
-  end
-
-  def routing_table do
-  end
-
-  def node_descriptor(addr) do
-  end
-
   @doc """
   Set a process as a listener of messages recieved by the device on the specified endpoint number.
   """
   @spec listen(integer, pid) :: :ok
   def listen(endpoint, listener) do
+    Device.register_listener(endpoint, listener)
     :ok
   end
 
