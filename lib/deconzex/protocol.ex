@@ -157,9 +157,9 @@ defmodule Deconzex.Protocol do
 
     payload_len =
       case Address.mode(address) do
-        :group -> asdu_length + 12
-        :nwk -> asdu_length + 13
-        :ieee -> asdu_length + 19
+        :group -> asdu_length + 14
+        :nwk -> asdu_length + 15
+        :ieee -> asdu_length + 21
       end
 
     addr = Address.serialize(address)

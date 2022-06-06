@@ -48,17 +48,17 @@ defmodule Deconzex.Device do
   end
 
   @spec get_request_id() :: integer
-  def get_request_id  do
+  def get_request_id do
     GenServer.call(__MODULE__, :get_request_id)
   end
 
   @spec uart_connected() :: boolean
-  def uart_connected  do
+  def uart_connected do
     GenServer.call(__MODULE__, :uart_connected)
   end
 
   @spec restart() :: :ok
-  def restart  do
+  def restart do
     GenServer.cast(__MODULE__, :restart)
   end
 
@@ -78,7 +78,10 @@ defmodule Deconzex.Device do
   end
 
   @spec read_parameter(Parameters.t()) ::
-          {:error, :invalid_value} | {:error, :unsupported} | {:error, :timeout} | Parameters.param
+          {:error, :invalid_value}
+          | {:error, :unsupported}
+          | {:error, :timeout}
+          | Parameters.param()
   def read_parameter(parameter) do
     GenServer.cast(__MODULE__, {&Protocol.read_parameter_request/2, [parameter], self()})
 
@@ -89,7 +92,7 @@ defmodule Deconzex.Device do
     end
   end
 
-  @spec write_parameter(Parameters.t(), Parameters.param) ::
+  @spec write_parameter(Parameters.t(), Parameters.param()) ::
           :ok | {:error, :invalid_value} | {:error, :unsupported} | {:error, :timeout}
   def write_parameter(parameter, value) do
     GenServer.cast(__MODULE__, {&Protocol.write_parameter_request/3, [parameter, value], self()})
@@ -230,7 +233,13 @@ defmodule Deconzex.Device do
         handle_frame(frame, listeners, state.data_listeners)
       end)
 
-    {:noreply, %{state | listeners: unused_listeners}}
+    last_seq = Enum.max_by(frames, fn frame -> frame.seq end).seq
+
+    if last_seq > state.seq do
+      {:noreply, %{state | listeners: unused_listeners, seq: last_seq}}
+    else
+      {:noreply, %{state | listeners: unused_listeners}}
+    end
   end
 
   # Keep the watchdog timer on the Conbee going.
@@ -239,7 +248,12 @@ defmodule Deconzex.Device do
     keepalive_s = Application.fetch_env!(:deconzex, :device)[:keepalive_s]
 
     Process.send_after(self(), :watchdog, keepalive_s * 1000)
-    write_parameter(:watchdog_ttl, keepalive_s * 2)
+
+    SerialPort.write(
+      state.uart,
+      Protocol.write_parameter_request(state.seq, :watchdog_ttl, keepalive_s * 2)
+    )
+
     {:noreply, state}
   end
 
@@ -259,6 +273,7 @@ defmodule Deconzex.Device do
 
   defp do_handle_frame(frame, listeners) do
     valid_listeners = Enum.filter(listeners, fn {_, s} -> s == frame.seq end)
+
     Enum.each(valid_listeners, fn {pid, _} -> send(pid, frame) end)
     listeners -- valid_listeners
   end

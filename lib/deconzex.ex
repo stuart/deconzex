@@ -120,18 +120,18 @@ defmodule Deconzex do
       destination_address: Address.nwk(nwk_address),
       destination_endpoint: 0,
       profile_id: 0,
-      cluster_id: 0x36,
+      cluster_id: 0x0036,
       source_endpoint: 0,
       asdu: zdp_frame
     }
 
     case Device.enqueue_send_data(request) do
-      :ok ->
+      %{status: :success} ->
         :ok = Device.write_parameter(:permit_join, seconds)
         Logger.debug("permit join for #{seconds} seconds")
         :ok
 
-      {:error, reason} ->
+      %{status: reason} ->
         {:error, reason}
     end
   end
@@ -142,12 +142,21 @@ defmodule Deconzex do
   """
   @spec reset :: :ok
   def reset do
-    # Device.reset()
     :ok
   end
 
-  def write(%Deconzex.APS.Request{} = request) do
-    :ok
+  def send_request(%Deconzex.APS.Request{} = request) do
+    request_id = Device.get_request_id()
+
+    request = %{request | request_id: request_id}
+
+    case Device.enqueue_send_data(request) do
+      %{status: :success} ->
+        :ok
+
+      %{status: reason} ->
+        {:error, reason}
+    end
   end
 
   def lqi(nwk_address) do

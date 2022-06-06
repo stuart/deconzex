@@ -148,7 +148,7 @@ defmodule ZCL.Cluster do
 
   def handle_call({:command, command_key, args}, _from, %__MODULE__{mode: :client} = state)
       when is_atom(command_key) do
-    case Enum.find(state.cluster_module.client_commands, fn({id, key}) -> key == command_key end) do
+    case Enum.find(state.cluster_module.client_commands, fn {id, key} -> key == command_key end) do
       {:ok, _} -> {:reply, Kernel.apply(state.callback_module, command_key, args), state}
       _ -> {:error, :unknown_command}
     end

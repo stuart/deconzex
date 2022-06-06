@@ -2,6 +2,7 @@ defmodule ZDO do
   @moduledoc """
     Zigbee device object
   """
+
   # initialize the APS, NWK layser and SSP.
   # and any other zigbee device layer other than end applications residing over
   # endpints.
