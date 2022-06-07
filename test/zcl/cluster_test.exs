@@ -70,15 +70,15 @@ defmodule ZCL.ClientClusterTest do
   end
 
   test "cannot read the default ZCLVersion attribute from the cluster", %{cluster: cluster} do
-    assert {:error, :unknown_attribute} == ZCL.Cluster.get_attribute(cluster, :zcl_version)
+    assert {:error, :unknown_attribute} = ZCL.Cluster.get_attribute(cluster, :zcl_version)
   end
 
-  test "cannot write an attribute", %{cluster: cluster} do
-    assert {:error, :unknown_attribute} ==
+  test "cannot write an attribute that is read only", %{cluster: cluster} do
+    assert {:error, :unknown_attribute} =
              ZCL.Cluster.set_attribute(cluster, :physical_environment, 0x02)
   end
 
   test "cannot call the factory_reset via the command_key", %{cluster: cluster} do
-    assert {:error, :unknown_command} == ZCL.Cluster.command(cluster, :factory_reset)
+    assert {:error, :unknown_command} = ZCL.Cluster.command(cluster, :factory_reset)
   end
 end

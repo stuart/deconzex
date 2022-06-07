@@ -8,13 +8,14 @@ defmodule Deconzex.Device do
       to and from it and forwards them to the appropriate handlers in the
       higher layers.
   """
+
   defstruct uart: nil,
             # Serial port message sequence number.
             seq: 0,
             listeners: [],
-            data_listeners: [],
+            endpoint_listeners: [],
             uart_connected: false,
-            # Incermenting request id.
+            # Incrementing request id.
             request_id: 0
 
   @type t :: %__MODULE__{}
@@ -144,8 +145,9 @@ defmodule Deconzex.Device do
   end
 
   def register_listener(endpoint, listener) do
-
+    GenServer.cast(__MODULE__, {:register_listener, endpoint, listener})
   end
+
   ### Server
 
   @impl true
@@ -176,10 +178,16 @@ defmodule Deconzex.Device do
   end
 
   @impl true
+
+  def handle_cast({:register_listener, endpoint, listener}, state) do
+    {:noreply, %{state | endpoint_listeners: [{endpoint, listener} | state.endpoint_listeners]}}
+  end
+
   def handle_cast(
         {protocol_command, args, listener},
         %{uart_connected: true} = state
       ) do
+
     SerialPort.write(state.uart, apply(protocol_command, [state.seq | args]))
 
     {:noreply,
@@ -233,7 +241,7 @@ defmodule Deconzex.Device do
 
     unused_listeners =
       Enum.reduce(frames, state.listeners, fn frame, listeners ->
-        handle_frame(frame, listeners, state.data_listeners)
+        handle_frame(frame, state)
       end)
 
     last_seq = Enum.max_by(frames, fn frame -> frame.seq end).seq
@@ -262,16 +270,30 @@ defmodule Deconzex.Device do
 
   defp handle_frame(
          %{command: :device_state_changed, apsde_data_flags: %{aps_data_indication: 1}} = frame,
-         listeners,
-         data_listeners
+         state
        ) do
-    Logger.info("Data indication frame recieved.")
-    Enum.each(data_listeners, fn listener -> Logger.debug("Sending frame") end)
-    do_handle_frame(frame, listeners)
+    Logger.info("Data indication.")
+
+    SerialPort.write(state.uart, Protocol.read_received_data_request(state.seq))
+    do_handle_frame(frame, state.listeners)
   end
 
-  defp handle_frame(frame, listeners, _) do
-    do_handle_frame(frame, listeners)
+  defp handle_frame(%{command: :aps_data_indication, destination_endpoint: destination_endpoint} = frame, state) do
+    Logger.info("Data frame recieved.")
+
+    Enum.each(state.endpoint_listeners, fn({endpoint, listener}) ->
+      case destination_endpoint do
+        endpoint -> send(listener, frame)
+        0xFF -> send(listener, frame) # Broadcast, TODO filter by cluster
+        _ -> nil
+      end
+    end)
+
+    do_handle_frame(frame, state.listeners)
+  end
+
+  defp handle_frame(frame, state) do
+    do_handle_frame(frame, state.listeners)
   end
 
   defp do_handle_frame(frame, listeners) do

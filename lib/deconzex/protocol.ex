@@ -283,10 +283,10 @@ defmodule Deconzex.Protocol do
          <<_payload_len::16, _::2, request_free_slots::1, configuration_changed::1, indication::1,
            confirm::1, network_state::2, payload::binary>>
        ) do
-    {destination_address, payload} = Address.deserialize(payload)
-    <<destination_endpoint::8, payload::binary>> = payload
-    {source_address, payload} = Address.deserialize(payload)
-    <<source_endpoint::8, payload::binary>> = payload
+    {destination_address, <<destination_endpoint::8, payload::binary>>} =
+      Address.deserialize(payload)
+
+    {source_address, <<source_endpoint::8, payload::binary>>} = Address.deserialize(payload)
 
     <<profile_id::16-little, cluster_id::16-little, asdu_length::16-little, payload::binary>> =
       payload
