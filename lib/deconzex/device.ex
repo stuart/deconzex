@@ -283,8 +283,8 @@ defmodule Deconzex.Device do
 
     Enum.each(state.endpoint_listeners, fn({endpoint, listener}) ->
       case destination_endpoint do
-        endpoint -> send(listener, frame)
         0xFF -> send(listener, frame) # Broadcast, TODO filter by cluster
+        ^endpoint -> send(listener, frame)
         _ -> nil
       end
     end)
