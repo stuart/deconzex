@@ -187,7 +187,6 @@ defmodule Deconzex.Device do
         {protocol_command, args, listener},
         %{uart_connected: true} = state
       ) do
-
     SerialPort.write(state.uart, apply(protocol_command, [state.seq | args]))
 
     {:noreply,
@@ -278,12 +277,16 @@ defmodule Deconzex.Device do
     do_handle_frame(frame, state.listeners)
   end
 
-  defp handle_frame(%{command: :aps_data_indication, destination_endpoint: destination_endpoint} = frame, state) do
+  defp handle_frame(
+         %{command: :aps_data_indication, destination_endpoint: destination_endpoint} = frame,
+         state
+       ) do
     Logger.info("Data frame recieved.")
 
-    Enum.each(state.endpoint_listeners, fn({endpoint, listener}) ->
+    Enum.each(state.endpoint_listeners, fn {endpoint, listener} ->
       case destination_endpoint do
-        0xFF -> send(listener, frame) # Broadcast, TODO filter by cluster
+        # Broadcast, TODO filter by cluster
+        0xFF -> send(listener, frame)
         ^endpoint -> send(listener, frame)
         _ -> nil
       end
